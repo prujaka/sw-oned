@@ -1,7 +1,10 @@
 program sw_oned
   implicit none
   integer, parameter :: DP = kind(1.0d0)
+  integer, parameter :: ITER_MAX = 100000000
   integer, parameter :: N = 100
+  real(DP), parameter :: TIME_FIN = 1.0d0
+  real(DP), parameter :: CFL = 0.9d0
   real(DP), parameter :: L = 100.0d0
   real(DP), parameter :: XL = 0.0d0
   real(DP), parameter :: GG = 9.81d0
@@ -15,17 +18,38 @@ program sw_oned
   real(DP), parameter :: BC_U_RIGHT = -1.0d0
   character(len=20), parameter :: OUTPUT_FILE = 'res.dat'
 
+  integer :: it
+  real(DP) :: dt=1.d-8, time=0.0d0
+  real(DP) :: t_start, t_end
   real(kind=DP), allocatable :: x(:), h(:), u(:)
+
   allocate(x(0:N+1), h(0:N+1), u(0:N+1))
+
+  call cpu_time(t_start)
 
   call set_mesh(x)
   call set_ic_dambreak(x, h, u)
   call output_solution(OUTPUT_FILE, x, h, u)
   call set_bc(h, u)
+  do while(time<TIME_FIN)
+    if (it.ge.ITER_MAX) exit
+    dt = timestep(h,u)
+    if (dt>TIME_FIN-time) dt = TIME_FIN-time
 
+    it=it+1
+    time=time+dt
+  enddo
+
+  call cpu_time(t_end)
   deallocate(x, h, u)
 
+  print*, 'cpu time:  ', t_end - t_start
+  print*, 'time:      ', time
+  print*, 'iterations:', it
+
 contains
+
+! INITIALISATION PROCEDURES
 
 subroutine set_mesh(x)
   real(DP), intent(out) :: x(0:N+1)
@@ -59,6 +83,45 @@ subroutine set_bc(h, u)
   u(0) = BC_U_LEFT * u(1)
   h(N+1) = h(N)
   u(N+1) = BC_U_RIGHT * u (N)
+end
+
+real(DP) function timestep(h,u)
+  implicit none
+  real(kind=DP), dimension(0:N+1), intent(in) :: h, u
+  real(kind=DP) :: cmax
+  integer :: i
+
+  cmax = 0.0d0
+  do i=1,N
+    cmax = max( cmax, dabs(u(i)) + dsqrt(GG*h(i)) )
+  enddo
+  timestep = CFL*dx/cmax
+end
+
+! AUX PROCEDURES
+
+subroutine prim_to_cons(h, u, h_cons, u_cons)
+  real(DP), intent(in) :: h(0:N+1), u(0:N+1)
+  real(DP), intent(out) :: h_cons(0:N+1), u_cons(0:N+1)
+  integer :: i
+
+  do i = 1, N
+    h_cons(i) = h(i)
+    u_cons(i) = h(i) * u(i)
+  enddo
+
+end
+
+subroutine cons_to_prim(h_cons, u_cons, h, u)
+  real(DP), intent(in) :: h_cons(0:N+1), u_cons(0:N+1)
+  real(DP), intent(out) :: h(0:N+1), u(0:N+1)
+  integer :: i
+
+  do i = 1, N
+    h(i) = h_cons(i)
+    u(i) = u_cons(i) / h(i)
+  enddo
+
 end
 
 subroutine output_solution(filename, x, h, u)
