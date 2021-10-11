@@ -5,21 +5,27 @@ program sw_oned
   real(DP), parameter :: gg = 9.81d0
   real(DP), parameter :: L = 100.0d0
   real(DP), parameter :: XL = 0.0d0
+  real(DP), parameter :: X_DAM = 0.4d0 * L
   real(DP), parameter :: DX = L / DFLOAT(N)
+  real(DP), parameter :: DEPTH_LEFT = 1.2d0
+  real(DP), parameter :: DEPTH_RIGHT = 1.0d0
+  real(DP), parameter :: VELOCITY_LEFT = 1.0d0
+  real(DP), parameter :: VELOCITY_RIGHT = 1.0d0
   character(len=20), parameter :: OUTPUT_FILE = 'res.dat'
 
-  real(kind=DP), allocatable :: x(:)
-  allocate(x(0:N+1))
+  real(kind=DP), allocatable :: x(:), h(:), u(:)
+  allocate(x(0:N+1), h(0:N+1), u(0:N+1))
 
   call set_mesh(x)
-  call output_solution(OUTPUT_FILE, x)
+  call set_ic_dambreak(x, h, u)
+  call output_solution(OUTPUT_FILE, x, h, u)
 
-  deallocate(x)
+  deallocate(x, h, u)
 
 contains
 
 subroutine set_mesh(x)
-  real(kind=DP), intent(out) :: x(0:N+1)
+  real(DP), intent(out) :: x(0:N+1)
   integer :: i
 
   do i=0,N+1
@@ -27,14 +33,30 @@ subroutine set_mesh(x)
   enddo
 end
 
-subroutine output_solution(filename, x)
+subroutine set_ic_dambreak(x, h, u)
+  real(DP), intent(in) :: x(0:N+1)
+  real(DP), intent(out) :: h(0:N+1), u(0:N+1)
+  integer :: i
+
+  do i=1,N
+    if (x(i).le.X_DAM) then
+      h(i)=DEPTH_LEFT
+      u(i)=VELOCITY_LEFT
+    else
+      h(i)=DEPTH_RIGHT
+      u(i)=VELOCITY_RIGHT
+    endif
+  enddo
+end
+
+subroutine output_solution(filename, x, h, u)
   character(len=20), intent(in) :: filename
-  real(kind=DP), dimension(0:N+1), intent(in) :: x
+  real(DP), dimension(0:N+1), intent(in) :: x, h, u
   integer :: i
 
   open(unit=10,file=filename)
   do i=1,N
-    write(10,*) x(i)
+    write(10,*) x(i), h(i), u(i)
   enddo
   close(10)
 end
