@@ -1,3 +1,5 @@
+! Toro, Shock capturing methods for free surface shallow water flows 2001
+! test 1, page 120
 program sw_oned
   implicit none
   integer, parameter :: DP = kind(1.0d0)

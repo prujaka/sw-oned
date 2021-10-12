@@ -1,3 +1,5 @@
+! Toro, Shock capturing methods for free surface shallow water flows 2001
+! test 2, page 120
 program sw_oned
   implicit none
   integer, parameter :: DP = kind(1.0d0)
@@ -5,14 +7,14 @@ program sw_oned
   integer, parameter :: N = 500
   real(DP), parameter :: GG = 9.8d0
   real(DP), parameter :: CFL = 0.45d0
-  real(DP), parameter :: TIME_FIN = 7.0d0
+  real(DP), parameter :: TIME_FIN = 2.5d0
   real(DP), parameter :: L = 50.0d0
   real(DP), parameter :: XL = 0.0d0
-  real(DP), parameter :: X_DAM = 10.0d0
+  real(DP), parameter :: X_DAM = 25.0d0
   real(DP), parameter :: DEPTH_LEFT = 1.0d0
-  real(DP), parameter :: VELOCITY_LEFT = 2.5d0
-  real(DP), parameter :: DEPTH_RIGHT = 0.1d0
-  real(DP), parameter :: VELOCITY_RIGHT = 0.0d0
+  real(DP), parameter :: VELOCITY_LEFT = -5.0d0
+  real(DP), parameter :: DEPTH_RIGHT = 1.0d0
+  real(DP), parameter :: VELOCITY_RIGHT = 5.0d0
   real(DP), parameter :: BC_U_LEFT = 1.0d0
   real(DP), parameter :: BC_U_RIGHT = 1.0d0
   real(DP), parameter :: DX = L / DFLOAT(N)
